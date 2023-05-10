@@ -1,0 +1,1 @@
+This repository is a way to analyze chirps within a signal. This is the second verson I have published. I hope to make optimizations to speed up the code in the future. The necessary python imports for this library include matplotlib and scipy. 
