@@ -12,6 +12,13 @@ import os
 
 
 def g(n: float, x, y, threshold: float = .01): # g kernel defined in the paper.
+    """
+    :param n:
+    :param x:
+    :param y:
+    :param threshold:
+    :return:
+    """
     if abs(y) > threshold:
         return 1 / 2 * (np.sign(x) * sqrt(np.abs(x / y)) * jv(1 / (2.0 * n), (np.abs(x) * np.abs(y)) ** n / n) +
                         1j * np.sign(y) * ((2 * n) ** (1 / (2 * n)) / (np.abs(y) * gamma(1 - 1 / (2 * n)))
@@ -23,7 +30,14 @@ def g(n: float, x, y, threshold: float = .01): # g kernel defined in the paper.
         return 1 / 2 * (even + odd)
 
 
-def dpt(S, T, v):
+def dpt(S: np.array, T: np.array, v: np.array):
+    """
+
+    :param S:
+    :param T:
+    :param v:
+    :return:
+    """
     return np.matmul(S, np.matmul(T, v))
 
 
