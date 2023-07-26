@@ -92,6 +92,7 @@ class VoxelGrid:
         self.voxel_size = 20  # Size of a voxel
         self.title = "Voxel Plot"
         self.marker = "s"
+        self.region_of_interest = None
 
     # noinspection PyAttributeOutsideInit
     def setPlottingBehavior(
@@ -102,23 +103,43 @@ class VoxelGrid:
         self.title = title
         self.marker = marker
 
+    def setRegionOfInterest(self, frequency_range, time_range, n_range):
+        """
+        Set the region of interest for plotting.
+        Parameters:
+            - frequency_range: A tuple (min_freq, max_freq) specifying the frequency range.
+            - time_range: A tuple (min_time, max_time) specifying the time range.
+            - n_range: A tuple (min_n, max_n) specifying the n range.
+        """
+        self.region_of_interest = {
+            "frequency": frequency_range,
+            "time": time_range,
+            "n": n_range
+        }
+
     def plot(self):
         output_values = np.abs(self.gridValue)
+
+        # Apply region of interest filtering if specified
+        if self.region_of_interest is not None:
+            freq_range = self.region_of_interest["frequency"]
+            time_range = self.region_of_interest["time"]
+            n_range = self.region_of_interest["n"]
+
+            freq_mask = (self.frequency >= freq_range[0]) & (self.frequency <= freq_range[1])
+            time_mask = (self.time >= time_range[0]) & (self.time <= time_range[1])
+            n_mask = (self.n_range >= n_range[0]) & (self.n_range <= n_range[1])
+
+            output_values[~(freq_mask[:, None, None] & time_mask[None, :, None] & n_mask[None, None, :])] = 0
+
         maximum, _ = max_in_array(output_values)
 
-        tt, ff, nn = np.meshgrid(self.time, self.frequency, self.n_range, indexing="ij")
-
-        indices = np.argwhere(
-            output_values > self.threshold * maximum
-        )  # Get indices where condition is met
-        values = output_values[
-            indices[:, 0], indices[:, 1], indices[:, 2]
-        ]  # Extract values at those indices
+        indices = np.argwhere(output_values > self.threshold * maximum)
+        values = output_values[indices[:, 0], indices[:, 1], indices[:, 2]]
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
 
-        # Convert indices to integer scalar arrays
         freq_indices = indices[:, 0].astype(int)
         time_indices = indices[:, 1].astype(int)
 
@@ -129,10 +150,12 @@ class VoxelGrid:
             c=values,
             marker=self.marker,
             alpha=0.8,
+            cmap="magma"
         )
         ax.set_xlabel("n-frequency")
         ax.set_ylabel("time")
         ax.set_zlabel("n-value")
+        ax.set_title(self.title)
 
         plt.show()
 
@@ -217,4 +240,7 @@ if __name__ == "__main__":
     vox_grid = generateRandomGrid(50, 50, 40)
     vox = VoxelGrid(time, freq, n_range, vox_grid)
     vox.setPlottingBehavior(0.999, 6, "Title")
+    vox.plot()
+    vox.setPlottingBehavior(0.9, 6, "Title")
+    # vox.setRegionOfInterest((0, 1), (0, .333), (1, 2))
     vox.plot()

@@ -56,8 +56,8 @@ def first_cn_taylor(n: float, x: float) -> float:
 
 
 def first_sn_taylor(n: float, x: float, y: float) -> complex:
-    return - 1j / 2 * np.sign(y) * (2 * n) ** (1 / (2 * n)) / (gamma(3 - 1 / (2 * n))) *
-        np.abs(x) ** (2 * n) * np.abs(y) ** (2 * n - 1)
+    return - 1j / 2 * np.sign(y) * (2 * n) ** (1 / (2 * n)) / (gamma(3 - 1 / (2 * n))) * \
+            np.abs(x) ** (2 * n) * np.abs(y) ** (2 * n - 1)
 
 def nGauss(n: float, x: float, sigma: float = 1):
     return np.exp(- (x / sigma) ** (2 * n) / (2 * n))

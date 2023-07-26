@@ -132,12 +132,12 @@ class ISTPT:
         S = con.construct_S(self.n, self.codomain, time_window)
         T = con.construct_T(len(self.codomain))
         g = con.nGauss_wfunc(self.window_size, self.n)
-        norm_g = integrate_vectors(g, g, self.dt)
+        norm_g = integrate_vectors(g, g, self.dt) ** 2
 
         self.S = S
         self.T = T
         self.g = g
-        self.norm_g = norm_g ** 2
+        self.norm_g = norm_g
 
         return [S, T, g]
     
@@ -240,15 +240,14 @@ if __name__ == "__main__":
 
     time = np.arange(-2, 2, 1/250)
     freq = np.arange(-4, 4, 1/250)
-    n = 3
+    n = 5
 
-    forward = STPT(n, time, freq, 50)
-    reverse = ISTPT(n, time, freq, 50)
+    forward = STPT(n, time, freq, 500)
+    reverse = ISTPT(n, time, freq, 500)
 
     fig, ax = plt.subplots()
 
-    amp = Signal(time, [np.exp(-t ** 2) * (np.sin(t ** n) + .1 * np.cos(8 * t ** n) + s_n(n, 3 * t)) + 
-                        np.sin(3 * t) for t in time])
+    amp = Signal(time, [np.exp(-t ** 2) * (np.sin(t ** n) + .1 * np.cos(8 * t ** n) + s_n(n, 3 * t)) for t in time])
     amp.populatePlot(ax)
 
     pix = forward.transform(amp)

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from comp.dpfunc import s_n, c_n
 import numpy as np
 from comp.sgn import Signal
-from dpt.transform import DPT, VVT, STPT
+from dpt.transform import DPT, VVT, STPT, ISTPT
 
 
 def figure5_6_7_8():
@@ -45,46 +45,75 @@ def figure5_6_7_8():
     return None
 
 
-figure5_6_7_8()
+def figures_9_10_11():
+    """ Example short time transform """
+    time = np.arange(0, 14, 1 / 400)
+    freq = np.arange(-7, 7, 1 / 200)
+    n = 4
+    window_size = 1600
+    amplitude = np.exp(- (time - 2) ** n / n) * s_n(n, 1.8 * (time - 2)) + \
+                np.exp(- (time - 8) ** (2 * n) / (2 * n)) * 1.2 * c_n(n, 2 * (time - 8)) + \
+                np.exp(- (time - 12) ** (2 * n)) * (.27 * c_n(n, 4 * (time - 12)))
+    multichirp = Signal(time, amplitude)
+    multichirp.labelSignal("Multi Chirp Signal", "Time", "Amplitude")
+    multichirp.plot()
+    stpt = STPT(n, time, freq, window_size)
+    istpt = ISTPT(n, time, freq, window_size)
+    pixel = stpt.transform(multichirp)
+    pixel.setPlottingBehavior((80, 40), (6, 6))
+    pixel.label("Short Time $\Phi_4$ Transform", "Time", "4-Frequency")
+    pixel.plot()
+    new_sig = istpt.transform(pixel)
+    new_sig.labelSignal("Inverse Short Time $\Phi_4$ Transform", "Time", "Amplitude")
+    new_sig.plot(real=True)
 
+def figures12():
+    fs = 100
+    n_range = np.arange(1, 5, .1)
+    time = np.arange(0, 20, 1 / fs)
+    freq = np.arange(0, 5, 1/ 100)
+    amp = np.exp(-(time - 3) ** 2 / 2) * np.cos(6 * (time - 3) ** 2) + \
+          np.exp(- (time - 10) ** 6 / 3) * np.sin(abs(4 * (time - 10)) ** 2.5 / 3) * np.sign(time - 10) * .6 \
+          + .7 * np.exp(-(time - 16) ** 2 / .5) * np.cos((3 * (time - 16)) ** 4 / 4)
+
+    multi_chirp = Signal(time, amp)
+    multi_chirp.labelSignal("Multi-Chirp Signal", "time", "amplitude")
+    multi_chirp.plot()
+
+    vvt = VVT(n_range, time, freq, 2 * fs)
+    voxel_rep = vvt.transform(multi_chirp)
+    for time_window in [(0, 7), (7, 13), (13, 20)]:
+        for thresh in [.99, .98, .97, .96, .95, .90, .85, .8]:
+            voxel_rep.setPlottingBehavior(threshold=thresh, voxel_size=8, title="Voxel Grid")
+            voxel_rep.setRegionOfInterest((0, 5), time_window, (1, 5))
+            voxel_rep.plot()
+
+"""def generate_noise_psds():
+    from dpt.transform import 
+    from time import process_time
+    import pickle
+    time = np.arange(0, 1, 1 / 1_000)
+    freq = np.arange(0, 100, 1/100)
+    PSD = np.zeros(len(freq))
+    n = 3
+    N = 100_000
+    t1 = process_time()
+    dpt = DPT(n, time, freq)
+    t2 = process_time()
+    print(f"DPT size {len(freq) * len(time)} took {t2 - t1} seconds")
+    for i in range(N):
+        noise = generate_noise(len(time), 2)
+        noisy_signal = Signal(time, noise)
+        noisy_frequency = dpt.transform(noisy_signal)
+        PSD += np.abs(noisy_frequency.amplitude) ** 2 / N
+    t3 = process_time()
+    print(f"Analysis of {N} signals took {t3 - t2} seconds")
+    save_array_to_file(PSD, "PowerSpectralDensity_brown")
+    save_array_to_file(freq, "Frequency")
+    PowerSpectralDensity = Signal(freq, PSD)
+    PowerSpectralDensity.labelSignal(r"PSD of white noise n = 3 $\sigma = 1$", "Time", "3-Frequency")
+    PowerSpectralDensity.plot()
 """
-time = np.arange(0, 14, 1 / 800)
-freq = np.arange(0, 5, 1 / 400)
-n = 4
-window_size = 3200
-amplitude = np.exp(- (time - 2) ** n / n) * s_n(n, 1.8 * (time - 2)) + \
-            np.exp(- (time - 8) ** (2 * n) / (2 * n)) * 1.2 * c_n(n, 2 * (time - 8)) + \
-            np.exp(- (time - 12) ** (2 * n)) * (.27 * c_n(n, 4 * (time - 12)))
-multichirp = Signal(time, amplitude)
-multichirp.labelSignal("Multi Chirp Signal", "Time", "Amplitude")
-multichirp.plot()
-stpt = STPT(n, time, freq, window_size)
-pixel = stpt.transform(multichirp)
-pixel.setPlottingBehavior((80, 40), (6, 6))
-pixel.label("Short Time $\Phi_4$ Transform", "Time", "4-Frequency")
-pixel.plot()
-"""
-"""
-from time import process_time
-import pickle
-time = np.arange(0, 1, 1 / 1_000)
-freq = np.arange(0, 100, 1/100)
-PSD = np.zeros(len(freq))
-n = 3
-N = 100_000
-t1 = process_time()
-dpt = DPT(n, time, freq)
-t2 = process_time()
-print(f"DPT size {len(freq) * len(time)} took {t2 - t1} seconds")
-for i in range(N):
-    noise = generate_noise(len(time), 2)
-    noisy_signal = Signal(time, noise)
-    noisy_frequency = dpt.transform(noisy_signal)
-    PSD += np.abs(noisy_frequency.amplitude) ** 2 / N
-t3 = process_time()
-print(f"Analysis of {N} signals took {t3 - t2} seconds")
-save_array_to_file(PSD, "PowerSpectralDensity_brown")
-save_array_to_file(freq, "Frequency")
-PowerSpectralDensity = Signal(freq, PSD)
-PowerSpectralDensity.labelSignal(r"PSD of white noise n = 3 $\sigma = 1$", "Time", "3-Frequency")
-PowerSpectralDensity.plot()"""
+
+if __name__ == '__main__':
+    figures12()
