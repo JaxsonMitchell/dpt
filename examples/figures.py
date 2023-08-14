@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from comp.dpfunc import s_n, c_n
 import numpy as np
 from comp.sgn import Signal
-from dpt.transform import DPT, VVT, STPT, ISTPT
+from dpt.transform import DPT, VVT, STPT, ISTPT, VVT2
 
 
 def figure5_6_7_8():
@@ -68,24 +68,47 @@ def figures_9_10_11():
     new_sig.plot(real=True)
 
 def figures12():
-    fs = 100
-    n_range = np.arange(1, 5, .1)
-    time = np.arange(0, 20, 1 / fs)
-    freq = np.arange(0, 5, 1/ 100)
-    amp = np.exp(-(time - 3) ** 2 / 2) * np.cos(6 * (time - 3) ** 2) + \
-          np.exp(- (time - 10) ** 6 / 3) * np.sin(abs(4 * (time - 10)) ** 2.5 / 3) * np.sign(time - 10) * .6 \
-          + .7 * np.exp(-(time - 16) ** 2 / .5) * np.cos((3 * (time - 16)) ** 4 / 4)
+    fs = 200
+    n_range = np.arange(2, 4, .02)
+    time = np.arange(0, 10, 1 / fs)
+    freq = np.arange(3, 7, 1/ 100)
+    amp = np.exp(-(time - 2) ** 6 / 6) * c_n(3, 4 * (time - 2)) + np.exp(-(time - 7) ** 4 / 4) * s_n(2, 6 * (time - 7))
 
     multi_chirp = Signal(time, amp)
-    multi_chirp.labelSignal("Multi-Chirp Signal", "time", "amplitude")
+    multi_chirp.labelSignal("Multi Chirp Order Signal", "time", "amplitude")
     multi_chirp.plot()
 
-    vvt = VVT(n_range, time, freq, 2 * fs)
+    vvt = VVT(n_range, time, freq, 800)
     voxel_rep = vvt.transform(multi_chirp)
-    for time_window in [(0, 7), (7, 13), (13, 20)]:
-        for thresh in [.99, .98, .97, .96, .95, .90, .85, .8]:
-            voxel_rep.setPlottingBehavior(threshold=thresh, voxel_size=8, title="Voxel Grid")
-            voxel_rep.setRegionOfInterest((0, 5), time_window, (1, 5))
+    for time_window in [(1, 3), (2, 2.5), (6, 8), (7, 7.5), (0, 10)]:
+        for thresh in [.99, .98, .97, .96, .95, .90, .85, .8, .75, .7, .65, .6]:
+            print(thresh)
+            voxel_rep.setPlottingBehavior(threshold=thresh, voxel_size=8, title=None)
+            voxel_rep.setRegionOfInterest((3, 7), time_window, (1, 5))
+            voxel_rep.plot()
+
+
+
+def figures13():
+    fs = 50
+    n_range = np.arange(2, 4, .02)
+    time = np.arange(2, 8, 1 / fs)
+    freq = np.arange(4, 6, 1/ 100)
+    amp = np.exp(-(time - 2) ** 6 / 6) * c_n(3, 4 * (time - 2)) + np.exp(-(time - 7) ** 4 / 4) * s_n(2, 6 * (time - 7))
+
+    multi_chirp = Signal(time, amp)
+    multi_chirp.labelSignal("Multi Chirp Order Signal", "time", "amplitude")
+    multi_chirp.plot()
+
+    vvt = VVT2(n_range, fs, freq, 200)
+    voxel_rep = vvt.transform(multi_chirp)
+    vvt.saveTransform("Testing.h5")
+
+    for time_window in [(1, 3), (2, 2.5), (6, 8), (7, 7.5), (0, 10)]:
+        for thresh in [.99, .98, .97, .96, .95, .90, .85, .8, .75, .7, .65, .6]:
+            print(thresh)
+            voxel_rep.setPlottingBehavior(threshold=thresh, voxel_size=8, title=None)
+            voxel_rep.setRegionOfInterest((3, 7), time_window, (1, 5))
             voxel_rep.plot()
 
 """def generate_noise_psds():
@@ -116,4 +139,4 @@ def figures12():
 """
 
 if __name__ == '__main__':
-    figures12()
+    figures13()
