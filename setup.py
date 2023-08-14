@@ -10,6 +10,7 @@ setup(
     install_requires=[
         'scipy',
         'numpy',
-        'matplotlib'
+        'matplotlib',
+        'h5py'
     ],
 )

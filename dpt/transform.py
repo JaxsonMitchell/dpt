@@ -8,6 +8,7 @@ There are 5 transforms that it is built for.
     - Vector Voxel transform.
 """
 
+import h5py
 import numpy as np
 import comp.constructor as con
 from comp.sgn import Signal
@@ -185,7 +186,9 @@ class VVT:
             n,
             con.construct_S(n, time_window, self.codomain),
             con.construct_T(self.window_size),
-            con.nGauss_wfunc(self.window_size, n)
+            con.nGauss_wfunc(self.window_size, n) / integrate_vectors(
+                con.nGauss_wfunc(self.window_size, n), con.nGauss_wfunc(self.window_size, n), 1 / fs
+            )
         ) for n in self.n_range]
 
     def transform(self, signal: Signal) -> VoxelGrid:
@@ -213,6 +216,47 @@ class VVT:
             raise ValueError(f"Invalid signal input, domain must be same size as the transform domain. \n"
                              f"{len(signal.domain)} != {len(self.domain)}")
 
+
+
+class VVT2:
+    def __init__(self, n_range: np.arange, fs: np.array, codomain: np.array, window_size: np.array):
+        self.n_range = n_range
+        self.fs = fs
+        self.codomain = codomain
+        self.window_size = window_size
+        self.matrices = list(self._constructTransform())
+
+    def _constructTransform(self):
+        time_window = np.linspace(-self.window_size / (2 * self.fs), self.window_size / (2 * self.fs),
+                                  self.window_size, endpoint=False)
+        return [(
+            n,
+            con.construct_S(n, time_window, self.codomain),
+            con.construct_T(self.window_size),
+            con.nGauss_wfunc(self.window_size, n) / integrate_vectors(
+                con.nGauss_wfunc(self.window_size, n), con.nGauss_wfunc(self.window_size, n), 1 / self.fs
+            )
+        ) for n in self.n_range]
+
+    def transform(self, signal: Signal) -> VoxelGrid:
+        voxel_array = self._computeTransform(signal)
+        voxel_grid = VoxelGrid(signal.domain, self.codomain, self.n_range, voxel_array)
+        return voxel_grid
+
+    def _computeTransform(self, signal: Signal) -> np.array:
+        voxel_grid = np.zeros((len(self.codomain), len(signal.domain), len(self.n_range)), dtype=complex)
+        for i in range(len(self.n_range)):
+            S = self.matrices[i][1]
+            T = self.matrices[i][2]
+            g = self.matrices[i][3]
+            voxel_grid[:, :, i] = np.matmul(
+                S, np.matmul(
+                    T, con.constructF(
+                        signal.amplitude, self.window_size, g
+                    )
+                )
+            )
+        return np.abs(voxel_grid)
 
 def has_nan(matrix):
     return np.isnan(matrix).any()
@@ -247,7 +291,7 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
 
-    amp = Signal(time, [np.exp(-t ** 2) * (np.sin(t ** n) + .1 * np.cos(8 * t ** n) + s_n(n, 3 * t)) for t in time])
+    amp = Signal(time, [np.exp(-t ** 2) * (np.sin(t ** 3) + .1 * np.cos(8 * t ** 5) + s_n(2, 3 * t)) for t in time])
     amp.populatePlot(ax)
 
     pix = forward.transform(amp)

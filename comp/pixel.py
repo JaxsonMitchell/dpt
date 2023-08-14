@@ -150,7 +150,6 @@ class VoxelGrid:
             c=values,
             marker=self.marker,
             alpha=0.8,
-            cmap="magma"
         )
         ax.set_xlabel("n-frequency")
         ax.set_ylabel("time")
