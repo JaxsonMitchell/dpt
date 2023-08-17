@@ -1,1 +1,1 @@
-from dpt.transform import DPT, VVT, STPT, ISTPT
+from dpt.transform import DPT, VVT, VVT2, STPT, ISTPT
