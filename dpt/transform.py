@@ -96,10 +96,12 @@ class STPT:
 
     def transform(self, signal: Signal) -> PixelGrid:
         pixel_array = self._computeTransform(signal)
-        output_pixelgrid = PixelGrid(time=self.domain,
-                                     frequency=self.codomain,
-                                     gridValue=pixel_array,
-                                     n=self.n)
+        output_pixelgrid = PixelGrid(
+            time=self.domain,
+            frequency=self.codomain,
+            gridValue=pixel_array,
+            n=self.n
+        )
         return output_pixelgrid
 
     def _computeTransform(self, signal: Signal) -> np.array:
