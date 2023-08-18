@@ -173,6 +173,36 @@ class VoxelGrid:
             top_values.append((self.time[time_idx], self.frequency[freq_idx], self.n_range[n_idx], flat_values[idx]))
         return top_values
 
+    def maxValuesByBatch(self, N: int = 1, batch_size: int = 100):
+        """ Find the maximum N values by processing the voxel grid in smaller batches.
+         
+        Working with huge datasets such as the datasets obtained from analyzing LIGO data would
+        have millions of voxels, processing them all at once ends up running into memory issues. 
+        
+        The indices get flattened in both examples to make it simpler to sort everything. """
+        output_values = np.abs(self.gridValue)
+        flat_values = output_values.flatten()
+        flat_indices = np.indices(output_values.shape).reshape((3, -1)).T
+
+        num_batches = (len(flat_indices) + batch_size - 1) // batch_size
+
+        top_values = []
+
+        for batch_num in range(num_batches):
+            start_idx = batch_num * batch_size
+            end_idx = (batch_num + 1) * batch_size
+            batch_indices = flat_indices[start_idx:end_idx]
+            batch_values = flat_values[start_idx:end_idx]
+
+            batch_sorted_indices = np.argsort(batch_values)[-N:][::-1]
+
+            for idx in batch_sorted_indices:
+                freq_idx, time_idx, n_idx = batch_indices[idx]
+                top_values.append((self.time[time_idx], self.frequency[freq_idx], self.n_range[n_idx], batch_values[idx]))
+
+        top_N_values = sorted(top_values, key=lambda x: x[3], reverse=True)[0:N]
+
+        return top_N_values
 
 def create2DPlot(grid: np.array):
     fig, ax = plt.subplots()

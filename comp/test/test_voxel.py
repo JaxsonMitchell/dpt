@@ -8,7 +8,6 @@ from comp.pixel import VoxelGrid
 
 class TestVoxel(unittest.TestCase):
     def setUp(self):
-        # Create a sample VoxelGrid instance for testing
         time = np.array([1, 2, 3])
         frequency = np.array([10, 20, 30])
         n_range = np.array([0, 1, 2])
@@ -20,9 +19,8 @@ class TestVoxel(unittest.TestCase):
         self.voxel_grid = VoxelGrid(time, frequency, n_range, gridValue)
 
     def test_maxNValues(self):
-        top_values = self.voxel_grid.maxValues(3)  # Retrieve top 3 values
+        top_values = self.voxel_grid.maxValues(3) 
         
-        # Define the expected top values based on the sample grid
         expected_top_values = [
             (3, 30, 2, 27),
             (3, 30, 1, 26),
@@ -30,6 +28,19 @@ class TestVoxel(unittest.TestCase):
         ]
         
         self.assertEqual(top_values, expected_top_values)
+
+    def test_maxNValuesByBatching(self):
+        """ Tests maxNValues batching method """
+        top_values = self.voxel_grid.maxValuesByBatch(3, batch_size=3)
+
+        expected_top_values = [
+            (3, 30, 2, 27),
+            (3, 30, 1, 26),
+            (3, 30, 0, 25)
+        ]
+
+        self.assertEqual(top_values, expected_top_values)
+
 
 if __name__ == '__main__':
     unittest.main()
