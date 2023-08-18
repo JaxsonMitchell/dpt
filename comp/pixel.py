@@ -158,6 +158,21 @@ class VoxelGrid:
 
         plt.show()
 
+    def maxValues(self, N: int = 1):
+        """ Finds the top N values and returns [(time, n-freq, n-value, amplitude) for topN values] """
+        output_values = np.abs(self.gridValue)
+
+        flat_values = output_values.flatten()
+        flat_indices = np.indices(output_values.shape).reshape((3, -1)).T
+
+        top_indices = np.argsort(flat_values)[-N:][::-1]
+
+        top_values = []
+        for idx in top_indices:
+            freq_idx, time_idx, n_idx = flat_indices[idx]
+            top_values.append((self.time[time_idx], self.frequency[freq_idx], self.n_range[n_idx], flat_values[idx]))
+        return top_values
+
 
 def create2DPlot(grid: np.array):
     fig, ax = plt.subplots()
