@@ -158,6 +158,15 @@ class VoxelGrid:
 
         plt.show()
 
+    def maxValue(self):
+        """ Finds the maximum value of a Voxel grid. """
+        maxIndex = np.where(self.gridValue == np.max(self.gridValue))
+        indicesList = [
+            (t, f, n) for t, f, n in zip(maxIndex[0], maxIndex[1], maxIndex[2])
+        ]
+        return indicesList
+
+
     def maxValues(self, N: int = 1):
         """ Finds the top N values and returns [(time, n-freq, n-value, amplitude) for topN values] """
         output_values = np.abs(self.gridValue)
