@@ -142,8 +142,8 @@ def figures_9_10_11():
     # new_sig = istpt.transform(pixel)
 
 def figures12():
-    fs = 200
-    n_range = np.arange(1, 4, .02)
+    fs = 100
+    n_range = np.arange(1, 4, .2)
     time = np.arange(0, 10, 1 / fs)
     freq = np.arange(3, 7, 1 / 100)
     amp = np.exp(-(time - 2) ** 6 / 6) * c_n(3, 4 * (time - 2)) + np.exp(-(time - 7) ** 4 / 4) * s_n(2, 6 * (time - 7))

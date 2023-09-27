@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.colors as mcolors
 
 
 class PixelGrid:
@@ -69,6 +69,8 @@ class PixelGrid:
 
 
 class VoxelGrid:
+    CUSTOMCMAP = mcolors.LinearSegmentedColormap.from_list("CCmap", [(0.5, 0.5, 0.5), (0, 0, 0)])
+
     def __init__(
         self,
         time: np.array,
@@ -156,7 +158,7 @@ class VoxelGrid:
             c=values,
             marker=self.marker,
             alpha=0.8,
-            cmap="gray",
+            cmap=self.CUSTOMCMAP,
         )
         ax.set_xlabel("n-frequency", fontsize=16)
         ax.set_ylabel("time", fontsize=16)
@@ -303,3 +305,21 @@ if __name__ == "__main__":
     vox.setPlottingBehavior(0.9, 6, "Title")
     # vox.setRegionOfInterest((0, 1), (0, .333), (1, 2))
     vox.plot()
+
+    def custom_function(x, y, z):
+        return x + y + z
+
+    x_range = np.linspace(0, 10, 20) 
+    y_range = np.linspace(0, 10, 20)
+    z_range = np.linspace(0, 10, 20)
+
+    
+    x, y, z = np.meshgrid(x_range, y_range, z_range)
+
+    grid_values = custom_function(x, y, z)
+
+    voxel_grid = VoxelGrid(x_range, y_range, z_range, grid_values)
+
+    voxel_grid.setPlottingBehavior(threshold=0.6, voxel_size=5, title="Voxel Plot")
+
+    voxel_grid.plot()
