@@ -47,13 +47,20 @@ class Signal:
         ax.set_xlabel(self.xlabel)
         ax.set_ylabel(self.ylabel)
 
-    def populatePlot(self, ax, plotAmplitude: bool = False, plotReal: bool = False):
+    def populatePlot(
+            self,
+            ax,
+            plotAmplitude: bool = False,
+            plotReal: bool = False,
+            plotImaginary: bool = True,
+            color: str = "black",
+        ):
         if plotAmplitude:
             ax.plot(
                 self.domain,
                 np.abs(self.amplitude),
                 label=self.label,
-                color="black",
+                color=color,
                 lw=0.6,
             )
         elif plotReal:
@@ -61,12 +68,24 @@ class Signal:
                 self.domain,
                 np.real(self.amplitude),
                 label=self.label,
-                color="black",
+                color=color,
+                lw=0.6,
+            )
+        elif plotImaginary:
+            ax.plot(
+                self.domain,
+                np.imag(self.amplitude),
+                label=self.label,
+                color=color,
                 lw=0.6,
             )
         else:
             ax.plot(
-                self.domain, self.amplitude, label=self.label, color="black", lw=0.6
+                self.domain,
+                self.amplitude,
+                label=self.label,
+                color=color,
+                lw=0.6,
             )
 
     def __add__(self, signal):
@@ -91,10 +110,10 @@ class Signal:
         return Signal(self.domain, product)
 
     # Plotting step approx
-    def plotStep(self):
+    def plotStep(self, ax):
         stepArrays = self.makeStep()
         plt.plot(stepArrays[0], stepArrays[1])
-        self.setPlotProperties()
+        self.setPlotProperties(ax)
         plt.show()
 
     def makeStep(self):
@@ -136,8 +155,15 @@ def isOnEdgeOfArray(index: int, domain: np.array) -> bool:
 
 
 if __name__ == "__main__":
-    time = np.arange(-3, 3, 1 / 30)
-    func = [np.sin(t) for t in time]
+    fig, ax = plt.subplots(tight_layout=True)
+    time = np.arange(-2, 2, 1 / 300)
+    step_time = np.arange(-2, 2, 1 / 10)
+    func = [np.sin(2 * t) +  np.cos(3 * t ** 2) * np.exp(- t ** 2) for t in time]
+    step_func = [np.sin(2 * t) +  np.cos(3 * t ** 2) * np.exp(- t ** 2) for t in step_time]
     sine = Signal(time, func)
-    sine.plotStep()
-    sine.plot()
+    step_sine = Signal(step_time, step_func).makeStep()
+    ax.plot(time, func, lw=1, color='black')
+    ax.plot(step_sine[0], step_sine[1], lw=1, color='red')
+    ax.set_title(fr"f(x) = sin(2t) + cos(3t^2)exp(-t^2)", fontsize=15)
+    ax.set_xlabel("Time", fontsize=15)
+    plt.show()

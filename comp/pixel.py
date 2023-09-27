@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 
 
 class PixelGrid:
@@ -30,14 +31,16 @@ class PixelGrid:
         self.__XY_skips = (1, 1)
         self.__XY_fontsize = (12, 12)
         self.decimals = 8
+        self.__XY_font_labels = 16
 
     # noinspection PyAttributeOutsideInit
     def setPlottingBehavior(
-        self, XY_skips: tuple, XY_fontsize: tuple, decimals: int = 8
+        self, XY_skips: tuple, XY_fontsize: tuple, decimals: int = 8, XY_font_labels: int = 16
     ):
         self.__XY_skips = XY_skips
         self.__XY_fontsize = XY_fontsize
         self.decimals = decimals
+        self.__XY_font_labels = XY_font_labels
 
     def label(self, name, xlabel, ylabel):
         self.name = name
@@ -59,6 +62,7 @@ class PixelGrid:
             self.xlabel,
             self.ylabel,
             self.name,
+            self.__XY_font_labels
         )
         ax.set_aspect(len(self.time) / (2 * len(self.frequency)))
         plt.show()
@@ -139,6 +143,8 @@ class VoxelGrid:
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
+        left, bottom, width, height = 0.0005, 0.025, .99, .95
+        ax.set_position([left, bottom, width, height])
 
         freq_indices = indices[:, 0].astype(int)
         time_indices = indices[:, 1].astype(int)
@@ -150,11 +156,12 @@ class VoxelGrid:
             c=values,
             marker=self.marker,
             alpha=0.8,
+            cmap="gray",
         )
-        ax.set_xlabel("n-frequency")
-        ax.set_ylabel("time")
-        ax.set_zlabel("n-value")
-        ax.set_title(self.title)
+        ax.set_xlabel("n-frequency", fontsize=16)
+        ax.set_ylabel("time", fontsize=16)
+        ax.set_zlabel("n-value", fontsize=16)
+        ax.set_title(self.title, fontsize=16)
 
         plt.show()
 
@@ -215,7 +222,7 @@ class VoxelGrid:
 
 def create2DPlot(grid: np.array):
     fig, ax = plt.subplots()
-    image = ax.matshow(grid, cmap="gray")
+    image = ax.matshow(grid, cmap="gray_r")
     return fig, ax, image
 
 
@@ -232,20 +239,19 @@ def setTimeFreqAxes(
     xlabel: str = "Time",
     ylabel: str = "Freq",
     title: str = "",
+    XY_fontsize_labels: int = 14
 ):
     ax.set_xticklabels(XY_data[0][:: XY_skips[0]], fontsize=XY_fontsize[0], rotation=90)
     ax.set_yticklabels(XY_data[1][:: XY_skips[1]], fontsize=XY_fontsize[1])
-    labelTimeFreqAxes(XY_fontsize, xlabel, ylabel, title)
+    labelTimeFreqAxes(ax, XY_fontsize_labels, xlabel, ylabel, title)
 
 
 def labelTimeFreqAxes(
-    XY_fontsize: tuple, xlabel: str = "Time", ylabel: str = "Freq", title: str = ""
+    ax, XY_fontsize: tuple, xlabel: str = "Time", ylabel: str = "Freq", title: str = ""
 ):
-    plt.xticks(fontsize=XY_fontsize[0])
-    plt.yticks(fontsize=XY_fontsize[1])
-    plt.xlabel(ylabel)
-    plt.ylabel(xlabel)
-    plt.title(title)
+    ax.set_xlabel(xlabel, fontsize=XY_fontsize)
+    ax.set_ylabel(ylabel, fontsize=XY_fontsize)
+    ax.set_title(title, fontsize=18)
 
 
 def generatePixelGridData():
