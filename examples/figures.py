@@ -142,8 +142,8 @@ def figures_9_10_11():
     # new_sig = istpt.transform(pixel)
 
 def figures12():
-    fs = 100
-    n_range = np.arange(1, 4, .2)
+    fs = 200
+    n_range = np.arange(1, 4, .02)
     time = np.arange(0, 10, 1 / fs)
     freq = np.arange(3, 7, 1 / 100)
     amp = np.exp(-(time - 2) ** 6 / 6) * c_n(3, 4 * (time - 2)) + np.exp(-(time - 7) ** 4 / 4) * s_n(2, 6 * (time - 7))
@@ -180,7 +180,6 @@ def figures13():
 
     vvt = VVT2(n_range, fs, freq, 200)
     voxel_rep = vvt.transform(multi_chirp)
-    vvt.saveTransform("Testing.h5")
 
     for time_window in [(1, 3), (2, 2.5), (6, 8), (7, 7.5), (0, 10)]:
         for thresh in [.99, .98, .97, .96, .95, .90, .85, .8, .75, .7, .65, .6]:

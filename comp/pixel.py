@@ -158,7 +158,7 @@ class VoxelGrid:
             c=values,
             marker=self.marker,
             alpha=0.8,
-            cmap=self.CUSTOMCMAP,
+            cmap=VoxelGrid.CUSTOMCMAP,
         )
         ax.set_xlabel("n-frequency", fontsize=16)
         ax.set_ylabel("time", fontsize=16)
