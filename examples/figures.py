@@ -207,12 +207,63 @@ def figure14():
 
     sig.populatePlot()
     sig_new.plot(real=True)
-    
-    
 
 
-if __name__ == '__main__':
-    # figure_eigenfunctions()
-    # figure5_6_7_8()
-    # figures_9_10_11()
-    figures12()
+def figureChirp():
+    """Figures corresponding to chirps and their translation.
+    This shows the translation variance of the transform when
+    n does not equal 1."""
+    time = np.arange(-2.5, 2.5, 1 / 300)
+    freq = np.arange(-10, 10, 1 / 300)
+    n = 3
+
+    fig, ax = plt.subplots()
+    ax.set_xlabel("Time", fontsize=18)
+    ax.set_ylabel("Amplitude", fontsize=18)
+    ax.set_title("Chirp signal of order 3", fontsize=18)
+
+    amplitude = np.exp(-time ** (2 * n) / 4) * c_n(n, 4 * time)
+    chirp3 = Signal(time, amplitude)
+    chirp3.populatePlot(ax, plotReal=True)
+    
+    plt.show()
+    
+    translated_chirp = chirp3.translate(0.25)
+    
+    dpt_transform_1 = DPT(n, time, freq)
+    dpt_transform_2 = DPT(1, time, freq)
+
+    norm_freq_3 = dpt_transform_1.transform(chirp3)
+    norm_freq_1 = dpt_transform_2.transform(translated_chirp)
+
+    norm_freq_3.labelSignal(
+        fr"$\Phi_3$-transform of chirp signal", "3-frequency", "Amplitude"
+    )
+    norm_freq_3.labelSignal(
+        fr"$\Phi_3$-transform of translated chirp signal", "3-frequency", "Amplitude"
+    )
+
+    fig, ax = plt.subplots()
+    ax.set_xlabel("3-Frequency", fontsize=18)
+    ax.set_ylabel("Amplitude", fontsize=18)
+    ax.set_title("Transformed Chirp signal", fontsize=18)
+
+    norm_freq_3.populatePlot(ax, plotAmplitude=True)
+    plt.show()
+
+    fig, ax = plt.subplots()
+    ax.set_xlabel("Frequency", fontsize=18)
+    ax.set_ylabel("Amplitude", fontsize=18)
+    ax.set_title("Fourier Transform of Chirp signal", fontsize=18)
+
+    norm_freq_1.populatePlot(ax, plotAmplitude=True)
+    plt.show()
+
+    return None
+
+
+figure_eigenfunctions()
+figure5_6_7_8()
+figures_9_10_11()
+figures12()
+figureChirp()
