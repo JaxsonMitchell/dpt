@@ -6,8 +6,6 @@ import numpy as np
 from comp.sgn import Signal
 from dpt.transform import DPT, VVT, STPT, ISTPT, VVT2
 
-import pycbc
-
 def figure_eigenfunctions():
     """ Figures for generating the eigenfunctions. """
     fs = 200
