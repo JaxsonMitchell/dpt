@@ -1,9 +1,9 @@
 """The paper corresponding to this has figures mainly generated from this file."""
 
 import matplotlib.pyplot as plt
-from comp.dpfunc import s_n, c_n
+from dptcomp.dpfunc import s_n, c_n
 import numpy as np
-from comp.sgn import Signal
+from dptcomp.sgn import Signal
 from dpt.transform import DPT, VVT, STPT, ISTPT, VVT2
 
 def figure_eigenfunctions():
