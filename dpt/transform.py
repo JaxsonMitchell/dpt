@@ -8,7 +8,6 @@ There are 5 transforms that it is built for.
     - Vector Voxel transform.
 """
 
-import h5py
 import numpy as np
 import dptcomp.constructor as con
 from dptcomp.sgn import Signal
