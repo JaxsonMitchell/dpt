@@ -3,7 +3,7 @@
 
 import unittest
 import numpy as np
-from comp.pixel import VoxelGrid
+from dptcomp.pixel import VoxelGrid
 
 
 class TestVoxel(unittest.TestCase):

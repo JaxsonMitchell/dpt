@@ -6,11 +6,7 @@ setup(
     description='Discrete Chirp Transform Software',
     author='Jaxson Mitchell',
     author_email='mitchj62@my.erau.edu',
-    packages=[
-        'dpt',
-        'comp',
-        'examples'
-    ],
+    packages=find_packages(),
     install_requires=[
         'scipy',
         'numpy',

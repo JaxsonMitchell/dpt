@@ -2,7 +2,7 @@
 This lays out the constructions of all the matrices described within the paper.
 """
 import numpy as np
-from comp.dpfunc import K
+from dptcomp.dpfunc import K
 
 
 def construct_S(n: float, domain, codomain, inverse=False) -> np.array:

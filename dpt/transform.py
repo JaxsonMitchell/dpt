@@ -10,9 +10,9 @@ There are 5 transforms that it is built for.
 
 import h5py
 import numpy as np
-import comp.constructor as con
-from comp.sgn import Signal
-from comp.pixel import PixelGrid, VoxelGrid
+import dptcomp.constructor as con
+from dptcomp.sgn import Signal
+from dptcomp.pixel import PixelGrid, VoxelGrid
 from abc import abstractmethod
 
 
@@ -282,7 +282,7 @@ def integrate_vectors(v1: np.array, v2: np.array, step_size):
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    from comp.dpfunc import s_n, c_n
+    from dptcomp.dpfunc import s_n, c_n
 
     time = np.arange(-2, 2, 1/250)
     freq = np.arange(-4, 4, 1/250)
