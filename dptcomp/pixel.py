@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.cm as cm
+import matplotlib.animation as animation
+import imageio
 
 
 class PixelGrid:
@@ -69,7 +72,7 @@ class PixelGrid:
 
 
 class VoxelGrid:
-    CUSTOMCMAP = mcolors.LinearSegmentedColormap.from_list("CCmap", [(0.5, 0.5, 0.5), (0, 0, 0)])
+    CUSTOMCMAP = mcolors.LinearSegmentedColormap.from_list("CCmap", [(1, 1, 1), (0, 0, 0)])
 
     def __init__(
         self,
@@ -138,10 +141,10 @@ class VoxelGrid:
 
             output_values[~(freq_mask[:, None, None] & time_mask[None, :, None] & n_mask[None, None, :])] = 0
 
-        maximum, _ = max_in_array(output_values)
+        maximum, _ = maxInArray(output_values)
 
         indices = np.argwhere(output_values > self.threshold * maximum)
-        values = output_values[indices[:, 0], indices[:, 1], indices[:, 2]]
+        values = output_values[indices[:, 0], indices[:, 1], indices[:, 2]] 
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
@@ -157,8 +160,8 @@ class VoxelGrid:
             self.n_range[indices[:, 2]],
             c=values,
             marker=self.marker,
-            alpha=0.8,
-            cmap=VoxelGrid.CUSTOMCMAP,
+            alpha=.8,
+            cmap="magma_r",
         )
         ax.set_xlabel("n-frequency", fontsize=16)
         ax.set_ylabel("time", fontsize=16)
@@ -175,21 +178,20 @@ class VoxelGrid:
         ]
         return indicesList
 
-
     def maxValues(self, N: int = 1):
         """ Finds the top N values and returns [(time, n-freq, n-value, amplitude) for topN values] """
-        output_values = np.abs(self.gridValue)
+        outputValues = np.abs(self.gridValue)
 
-        flat_values = output_values.flatten()
-        flat_indices = np.indices(output_values.shape).reshape((3, -1)).T
+        flatValues = outputValues.flatten()
+        flatIndices = np.indices(outputValues.shape).reshape((3, -1)).T
 
-        top_indices = np.argsort(flat_values)[-N:][::-1]
+        topIndices = np.argsort(flatValues)[-N:][::-1]
 
-        top_values = []
-        for idx in top_indices:
-            freq_idx, time_idx, n_idx = flat_indices[idx]
-            top_values.append((self.time[time_idx], self.frequency[freq_idx], self.n_range[n_idx], flat_values[idx]))
-        return top_values
+        topValues = []
+        for idx in topIndices:
+            freq_idx, time_idx, n_idx = flatIndices[idx]
+            topValues.append((self.time[time_idx], self.frequency[freq_idx], self.n_range[n_idx], flatValues[idx]))
+        return topValues
 
     def maxValuesByBatch(self, N: int = 1, batch_size: int = 100):
         """ Find the maximum N values by processing the voxel grid in smaller batches.
@@ -221,10 +223,122 @@ class VoxelGrid:
         top_N_values = sorted(top_values, key=lambda x: x[3], reverse=True)[0:N]
 
         return top_N_values
+        
+    def plotSlice(
+            self,
+            index: int,
+            time: bool = False,
+            nFreq: bool = False,
+            chirpOrder: bool = False,
+            plot: bool = True,
+            fig=None,
+            ax=None
+        ) -> None:
+        """ 2-dimensional representation of chirps. The method takes an index and a kwarg indicating 
+        a slice in either time, n-frequency, or chirp order. It is required to set one value to true.
+        
+        Kwarg arguments
+            time
+            nFreq
+            chirpOrder
+
+        If two values are set to true, it will choose the first value in the order time, nFreq, and chirpOrder
+        """
+        maximum, _ = maxInArray(self.gridValue)
+
+        if fig is None or ax is None:
+            fig, ax = plt.subplots()
+
+        if time:
+            im = ax.matshow(np.abs(self.gridValue[index, :, :]), vmax=maximum)
+            set2DLabels(ax, self.gridValue[:, index, :], (8, 8))
+            setTimeFreqAxes(
+                ax,
+                (np.round(self.frequency, 4), np.round(self.n_range, 4)),
+                (8, 8),
+                (12, 12),
+                "Chirp Order",
+                "n-Frequency",
+                f"Chirp Order vs. n-Frequency (time = {round(self.time[index], 4)})",
+                12
+            )
+            ax.set_aspect(len(self.frequency) / (2 * len(self.n_range)))
+            plt.tight_layout()
+            if plot:
+                plt.show()
+            return im
+        elif nFreq:
+            im = ax.matshow(np.abs(self.gridValue[:, index, :]), vmax=maximum)
+            set2DLabels(ax, self.gridValue[:, index, :], (8, 8))
+            setTimeFreqAxes(
+                ax,
+                (np.round(self.time, 4), np.round(self.n_range, 4)),
+                (8, 8),
+                (12, 12),
+                "Chirp Order",
+                "Time",
+                f"Chirp Order vs. Time (n-Frequency = {round(self.frequency[index], 4)})",
+                12
+            )
+            ax.set_aspect(len(self.time) / (2 * len(self.n_range)))
+            plt.tight_layout()
+            if plot:
+                plt.show()
+            return im
+        elif chirpOrder:
+            im = ax.matshow(np.abs(self.gridValue[:, :, index]), vmax=maximum)
+            set2DLabels(ax, self.gridValue[:, :, index], (8, 8))
+            setTimeFreqAxes(
+                ax,
+                (np.round(self.time, 4), np.round(self.n_range, 4)),
+                (8, 8),
+                (12, 12),
+                "n-Frequency",
+                "Time",
+                f"n-Frequency vs. Time (Chirp Order = {round(self.n_range[index], 4)})",
+                12
+            )
+            ax.set_aspect(len(self.time) / (2 * len(self.frequency)))
+            plt.tight_layout()
+            if plot:
+                plt.show()
+            return im
+        else:
+            raise ValueError("Invalid Input. One kwarg from time, nFreq, and chirpOrder must be set to True.")
+
+    def makeVoxelVideo(self, filename: str, interval: int, title: str = "Voxel Grid") -> None:
+        """
+        Method for saving voxel grids as a video where:
+
+        """
+        fig, ax = plt.subplots()
+
+        vmin = np.min(self.gridValue)
+        vmax = np.max(self.gridValue)
+
+        im = ax.imshow(self.gridValue[:, :, 0], cmap='viridis', vmin=vmin, vmax=vmax, aspect='auto')
+        fig.colorbar(im, ax=ax, label='Value')
+
+        def update(frame):
+            im.set_array(self.gridValue[:, :, frame])
+            ax.set_xlabel(f'Time')
+            ax.set_ylabel(f'{round(self.n_range[frame], 5)}-frequency')
+            ax.set_title(title)
+            return [im]
+
+        ani = animation.FuncAnimation(
+            fig, update,
+            frames=np.shape(self.gridValue)[2],
+            interval=interval, blit=True,
+        )
+
+        fig.tight_layout()
+        ani.save(filename, writer='ffmpeg')
+
 
 def create2DPlot(grid: np.array):
     fig, ax = plt.subplots()
-    image = ax.matshow(grid, cmap="gray_r")
+    image = ax.matshow(grid)
     return fig, ax, image
 
 
@@ -279,16 +393,28 @@ def generateRandomGrid(X, Y, Z=1):
     return grid
 
 
-def max_in_array(data: np.array):
+def maxInArray(data: np.array):
     """
     :param data: 3d/2d array. Finds where the maximum within the array is.
     :return: Returns the maximum value and where in the array the maximum value is at.
     """
 
-    Max_val = np.max(data)  # Finds the maximum within the array.
-    Max_Index = np.where(data == Max_val)
+    maxVal = np.max(data)  # Finds the maximum within the array.
+    maxIndex = np.where(data == maxVal)
 
-    return Max_val, Max_Index
+    return maxVal, maxIndex
+
+
+def minInArray(data: np.array):
+    """
+    :param data: 3d/2d array. Finds where the minimim within the array is.
+    :return: Returns the minimum value and where in the array the minimum value is at.
+    """
+
+    minVal = np.min(data)  # Finds the maximum within the array.
+    minIndex = np.where(data == minVal)
+
+    return minVal, minIndex
 
 
 if __name__ == "__main__":
@@ -300,26 +426,5 @@ if __name__ == "__main__":
     n_range = np.arange(1, 5, 1 / 10)
     vox_grid = generateRandomGrid(50, 50, 40)
     vox = VoxelGrid(time, freq, n_range, vox_grid)
-    vox.setPlottingBehavior(0.999, 6, "Title")
-    vox.plot()
-    vox.setPlottingBehavior(0.9, 6, "Title")
-    # vox.setRegionOfInterest((0, 1), (0, .333), (1, 2))
-    vox.plot()
-
-    def custom_function(x, y, z):
-        return x + y + z
-
-    x_range = np.linspace(0, 10, 20) 
-    y_range = np.linspace(0, 10, 20)
-    z_range = np.linspace(0, 10, 20)
-
-    
-    x, y, z = np.meshgrid(x_range, y_range, z_range)
-
-    grid_values = custom_function(x, y, z)
-
-    voxel_grid = VoxelGrid(x_range, y_range, z_range, grid_values)
-
-    voxel_grid.setPlottingBehavior(threshold=0.6, voxel_size=5, title="Voxel Plot")
-
-    voxel_grid.plot()
+    vox.makeVoxelVideo("test.mp4", 50, "Test")
+    vox.makeVoxelVideo("test.gif", 50, "em Silly")

@@ -76,12 +76,17 @@ def makePhiPSD(time: list, freq: list, n: float, num_samples: int, noise_functio
 
 
 if __name__ == '__main__':
-    n_range = [.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
+    n_range = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
 
-    dir_name = "pink_noise_psd"
+    dir_name = "white_noise_psd"
 
     for n in n_range:
-        PSD = load_array_from_file(f"{dir_name}/{n}PSD_Pink.pkl")
+        PSD = load_array_from_file(f"{dir_name}/{n}PSD_White.pkl")
         freq = np.arange(0, 100, 1/100)
-        plt.plot(freq, PSD)
+
+        plt.plot(freq[15:], PSD[15:])
+        plt.grid()
+        plt.title(fr"White Noise PSD (n = {n})")
+        plt.xlabel(fr"{n}-Frequency")
+        plt.ylabel("PSD Amplitude")
         plt.show()

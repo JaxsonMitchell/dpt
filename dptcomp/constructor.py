@@ -1,6 +1,10 @@
 """
+Name: Jaxson Mitchell
+
 This lays out the constructions of all the matrices described within the paper.
 """
+
+
 import numpy as np
 from dptcomp.dpfunc import K
 
@@ -79,11 +83,11 @@ def constructF(amplitude: np.array, J: int, g: np.array) -> np.array:
 
 def nGauss_wfunc(N: int, n):
     """Automated window function for the vdpt."""
-    # This initialization of the sigma value is so that it cuts off right when the window is done. It can be
+    # This initialization of the sigma value is so that it cuts off right when the window size is cut off. It can be
     # changed depending on what you want from a window function.
     sigma = (1 / 3) / (2 * n - 1) ** (
         1 / (2 * n)
-    )  # Places point of inflection close to the edge.
+    )  # Places point of inflection close to the edge. This is done through finding the zeros of the second derivative
 
     return np.array(
         [
@@ -96,6 +100,9 @@ def nGauss_wfunc(N: int, n):
 if __name__ == "__main__":
     domain = range(30)
     ampltiude = [2] + [1] * (len(domain) - 2) + [3]
+
     print(ampltiude)
+
     wj = constructF(ampltiude, 5)
+    
     print(wj)

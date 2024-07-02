@@ -142,9 +142,9 @@ def figures_9_10_11():
 
 def figures12():
     fs = 200
-    n_range = np.arange(1, 4, .02)
+    n_range = np.arange(1, 4, .05)
     time = np.arange(0, 10, 1 / fs)
-    freq = np.arange(3, 7, 1 / 100)
+    freq = np.arange(3, 7, .05)
     amp = np.exp(-(time - 2) ** 6 / 6) * c_n(3, 4 * (time - 2)) + np.exp(-(time - 7) ** 4 / 4) * s_n(2, 6 * (time - 7))
 
     multi_chirp = Signal(time, amp)
@@ -157,20 +157,21 @@ def figures12():
 
     vvt = VVT(n_range, time, freq, 800)
     voxel_rep = vvt.transform(multi_chirp)
-    for time_window in [ (2, 2.5), (7, 7.5),]:
-        for thresh in [ .75, .7, .65, .6]:
+    """for time_window in [(2, 2.5), (7, 7.5),]:
+        for thresh in [.75, .7, .65, .6, .5, .4, .3 ,.2]:
             print(thresh)
             voxel_rep.setPlottingBehavior(threshold=thresh, voxel_size=8, title=None)
             voxel_rep.setRegionOfInterest((3, 7), time_window, (1, 5))
-            voxel_rep.plot()
+            voxel_rep.plot()"""
 
+    voxel_rep.makeVoxelVideo("testVoxel.mp4", 100, "Multi-Chirp Order Signal")
 
 
 def figures13():
-    fs = 500
-    n_range = np.arange(2, 4, .5)
+    fs = 200
+    n_range = np.arange(2, 4, .1)
     time = np.arange(0, 10, 1 / fs)
-    freq = np.arange(4, 6, 1/ 30)
+    freq = np.arange(4, 6, 1 / 50)
     amp = np.exp(-(time - 2) ** 6 / 6) * c_n(3, 4 * (time - 2)) + np.exp(-(time - 7) ** 4 / 4) * s_n(2, 6 * (time - 7))
 
     multi_chirp = Signal(time, amp)
@@ -180,12 +181,16 @@ def figures13():
     vvt = VVT2(n_range, fs, freq, 200)
     voxel_rep = vvt.transform(multi_chirp)
 
-    for time_window in [(1, 3), (2, 2.5), (6, 8), (7, 7.5), (0, 10)]:
+    """for time_window in [(1, 3), (2, 2.5), (6, 8), (7, 7.5), (0, 10)]:
         for thresh in [.99, .98, .97, .96, .95, .90, .85, .8, .75, .7, .65, .6]:
             print(thresh)
             voxel_rep.setPlottingBehavior(threshold=thresh, voxel_size=8, title=None)
             voxel_rep.setRegionOfInterest((3, 7), time_window, (1, 5))
-            voxel_rep.plot()
+            voxel_rep.plot()"""
+
+    voxel_rep.plotGif("TimeProgression")
+    voxel_rep.plotGif("FrequencyProgression", nFreq=True)
+    voxel_rep.plotGif("ChirpOrderProgression", chirpOrder=True)
 
 
 def figure14():
@@ -261,8 +266,55 @@ def figureChirp():
     return None
 
 
-figure_eigenfunctions()
-figure5_6_7_8()
-figures_9_10_11()
-figures12()
-figureChirp()
+def figures_presentation():
+    time = np.arange(0, 8, 1/4096)
+    n1 = 1
+    n2 = 2
+    n3 = 3
+    plt.plot(time, s_n(n1, 1 * time), label="Chirp Order n = 1")
+    plt.plot(time, s_n(n2, 1 * time), label="Chirp Order n = 2")
+    plt.plot(time, s_n(n3, 1 * time), label="Chirp Order n = 3")
+    plt.legend()
+    plt.xlabel("Time")
+    plt.ylabel("Amplitude")
+    plt.suptitle("Plots of s_n(t)")
+    plt.title("Chirp Orders n = 1, 2, 3")
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+
+    time = np.arange(0, 30, 1/4096)
+    w1 = .5
+    w2 = 1
+    plt.plot(time, c_n(1.2, w1 * time), label=fr"Chirp Frequency $\omega$ = .5", color="black")
+    plt.plot(time, c_n(1.2, w2 * time), label=fr"Chirp Frequency $\omega$ = 1", color="red")
+    plt.legend()
+    plt.xlabel("Time")
+    plt.ylabel("Amplitude")
+    plt.suptitle("Plots of c_n(t)")
+    plt.title(fr"n-Frequencies $\omega$ = .5, 1")
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+
+    time = np.arange(-10, 10, 1/4096)
+    t01 = 0
+    t02 = 3
+    plt.plot(time, s_n(2, time - t01), label="t = 0")
+    plt.plot(time, s_n(2, time - t02), label="t = 3")
+    plt.legend()
+    plt.xlabel("Time")
+    plt.ylabel("Amplitude")
+    plt.suptitle("Plots of s_n(t)")
+    plt.title(fr"Centered Times: t = 0, 3")
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+
+
+#figure_eigenfunctions()
+#figure5_6_7_8()
+#figures_9_10_11()
+#figures12()
+#figureChirp()
+figures_presentation()

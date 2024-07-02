@@ -103,15 +103,34 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from time import process_time
 
-    time = np.arange(-100, 100, 1/100)
+    time = np.arange(-3, 3, 1 / 100)
 
-    t1 = process_time()
-    siggy = s_n(1.3, time)
-    t2 = process_time()
-    ciggy = c_n(1.3, time)
-    t3 = process_time()
+    # Create a figure and a set of subplots
+    fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+    fig.suptitle("Different Central Times")
 
-    print(f"{t2 - t1}s : {t3 - t2}s")
-    plt.plot(time, siggy)
-    plt.plot(time, ciggy)
+    # Plot each function on its own subplot
+    s1 = s_n(2, 2 * time)
+    axs[0].plot(time, s1)
+    axs[0].set_title(fr'More Spacing of Low Frequency Chirps ($f_n = 2$)')
+
+    s2 = s_n(2, 2 * (time - 1))
+    axs[1].plot(time, s2)
+    axs[1].set_title(fr'Small Spacing of High Frequency Chirps ($f_n = 4$)')
+
+    # Adjust layout to prevent overlap
+    plt.tight_layout()
+
+    # Show the plot
+    plt.show()
+
+    s1 = s_n(2, 2 * time)
+    s2 = s_n(2, 2 * (time - 1))
+    plt.vlines([0, 1], [-3] * 2, [3] * 2, colors=["red", "red"], linestyles=["--", "--"], label="Central Times")
+    plt.plot(time, s1, label="Chirp Signal")
+    plt.plot(time, s2, label="Translated Chirp Signal")
+    plt.title("Different Central Times")
+    plt.xlabel('time')
+    plt.ylabel('amplitude')
+    plt.legend()
     plt.show()

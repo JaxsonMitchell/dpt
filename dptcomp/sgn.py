@@ -161,9 +161,7 @@ if __name__ == "__main__":
     func = [np.sin(2 * t) +  np.cos(3 * t ** 2) * np.exp(- t ** 2) for t in time]
     step_func = [np.sin(2 * t) +  np.cos(3 * t ** 2) * np.exp(- t ** 2) for t in step_time]
     sine = Signal(time, func)
-    step_sine = Signal(step_time, step_func).makeStep()
-    ax.plot(time, func, lw=1, color='black')
-    ax.plot(step_sine[0], step_sine[1], lw=1, color='red')
+    sine.populatePlot(ax, plotReal=True)
     ax.set_title(fr"f(x) = sin(2t) + cos(3t^2)exp(-t^2)", fontsize=15)
     ax.set_xlabel("Time", fontsize=15)
     plt.show()
