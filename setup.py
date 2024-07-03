@@ -11,6 +11,7 @@ setup(
         'scipy',
         'numpy',
         'matplotlib',
-        'h5py'
+        'h5py',
+        'tqdm'
     ],
 )

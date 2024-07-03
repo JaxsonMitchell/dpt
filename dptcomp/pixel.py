@@ -306,7 +306,7 @@ class VoxelGrid:
         else:
             raise ValueError("Invalid Input. One kwarg from time, nFreq, and chirpOrder must be set to True.")
 
-    def makeVoxelVideo(self, filename: str, interval: int, title: str = "Voxel Grid") -> None:
+    def makeVoxelVideo(self, filename: str, interval: int, title: str = "Voxel Grid", XY_skips: tuple = (16, 16)) -> None:
         """
         Method for saving voxel grids as a video where:
 
@@ -321,9 +321,12 @@ class VoxelGrid:
 
         def update(frame):
             im.set_array(self.gridValue[:, :, frame])
-            ax.set_xlabel(f'Time')
-            ax.set_ylabel(f'{round(self.n_range[frame], 5)}-frequency')
-            ax.set_title(title)
+            setTimeFreqAxes(
+                ax, XY_data = (self.time, self.frequency), XY_skips = XY_skips,
+                XY_fontsize = (14, 14), xlabel = "Time", 
+                ylabel = f"{round(self.n_range[frame], 5)}-Frequency",
+                title = title
+            )
             return [im]
 
         ani = animation.FuncAnimation(
@@ -357,13 +360,17 @@ def setTimeFreqAxes(
     title: str = "",
     XY_fontsize_labels: int = 14
 ):
-    ax.set_xticklabels(XY_data[0][:: XY_skips[0]], fontsize=XY_fontsize[0], rotation=90)
-    ax.set_yticklabels(XY_data[1][:: XY_skips[1]], fontsize=XY_fontsize[1])
+    ax.set_xticks(range(0, len(XY_data[0]), XY_skips[0]))
+    ax.set_yticks(range(0, len(XY_data[1]), XY_skips[1]))
+    
+    ax.set_xticklabels(round(XY_data[0][::XY_skips[0]], 4), fontsize=XY_fontsize[0], rotation=90)
+    ax.set_yticklabels(round(XY_data[1][::XY_skips[1]], 4), fontsize=XY_fontsize[1])
+
     labelTimeFreqAxes(ax, XY_fontsize_labels, xlabel, ylabel, title)
 
 
 def labelTimeFreqAxes(
-    ax, XY_fontsize: tuple, xlabel: str = "Time", ylabel: str = "Freq", title: str = ""
+    ax, XY_fontsize: int, xlabel: str = "Time", ylabel: str = "Freq", title: str = ""
 ):
     ax.set_xlabel(xlabel, fontsize=XY_fontsize)
     ax.set_ylabel(ylabel, fontsize=XY_fontsize)
@@ -421,10 +428,10 @@ if __name__ == "__main__":
     myPixels = generatePixelGridExample()
     myPixels.plot()
 
-    time = np.arange(0, 1, 1 / 50)
-    freq = np.arange(0, 1, 1 / 50)
-    n_range = np.arange(1, 5, 1 / 10)
-    vox_grid = generateRandomGrid(50, 50, 40)
+    time = np.arange(0, 1, 1 / 100)
+    freq = np.arange(0, 1, 1 / 100)
+    n_range = np.arange(1, 5, 1 / 30)
+    vox_grid = generateRandomGrid(len(time), len(freq), len(n_range))
     vox = VoxelGrid(time, freq, n_range, vox_grid)
     vox.makeVoxelVideo("test.mp4", 50, "Test")
     vox.makeVoxelVideo("test.gif", 50, "em Silly")

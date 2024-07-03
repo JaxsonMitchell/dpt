@@ -12,6 +12,7 @@ import numpy as np
 import dptcomp.constructor as con
 from dptcomp.sgn import Signal
 from dptcomp.pixel import PixelGrid, VoxelGrid
+from tqdm.auto import tqdm
 from abc import abstractmethod
 
 
@@ -183,14 +184,15 @@ class VVT:
         fs = int(1 / (self.domain[-1] - self.domain[-2]))
         time_window = np.linspace(-self.window_size / (2 * fs), self.window_size / (2 * fs),
                                   self.window_size, endpoint=False)
-        return [(
-            n,
-            con.construct_S(n, time_window, self.codomain),
-            con.construct_T(self.window_size),
-            con.nGauss_wfunc(self.window_size, n) / integrate_vectors(
+        matrices = []
+        for n in tqdm(self.n_range, desc="Constructing Voxel Transform"):
+            S = con.construct_S(n, time_window, self.codomain)
+            T = con.construct_T(self.window_size)
+            g = con.nGauss_wfunc(self.window_size, n) / integrate_vectors(
                 con.nGauss_wfunc(self.window_size, n), con.nGauss_wfunc(self.window_size, n), 1 / fs
             )
-        ) for n in self.n_range]
+            matrices.append((n, S, T, g))
+        return matrices
 
     def transform(self, signal: Signal) -> VoxelGrid:
         voxel_array = self._computeTransform(signal)
@@ -199,9 +201,8 @@ class VVT:
 
     def _computeTransform(self, signal: Signal) -> np.array:
         if len(signal.domain) == len(self.domain):
-            # print_columns(con.constructF(signal.amplitude, self.window_size, self.g))
             voxel_grid = np.zeros((len(self.codomain), len(self.domain), len(self.n_range)), dtype=complex)
-            for i in range(len(self.n_range)):
+            for i in tqdm(range(len(self.n_range)), desc="Computing transform"):
                 S = self.matrices[i][1]
                 T = self.matrices[i][2]
                 g = self.matrices[i][3]

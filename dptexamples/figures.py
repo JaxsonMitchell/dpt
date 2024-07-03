@@ -145,7 +145,8 @@ def figures12():
     n_range = np.arange(1, 4, .05)
     time = np.arange(0, 10, 1 / fs)
     freq = np.arange(3, 7, .05)
-    amp = np.exp(-(time - 2) ** 6 / 6) * c_n(3, 4 * (time - 2)) + np.exp(-(time - 7) ** 4 / 4) * s_n(2, 6 * (time - 7))
+    amp = (np.exp(-(time - 2) ** 6 / 6) * c_n(3, 4 * (time - 2)) +\
+          np.exp(-(time - 7) ** 4 / 4) * s_n(2, 6 * (time - 7)) ) + np.random.normal(1, 3, len(time))
 
     multi_chirp = Signal(time, amp)
     fig, ax = plt.subplots(tight_layout=True)
@@ -315,6 +316,6 @@ def figures_presentation():
 #figure_eigenfunctions()
 #figure5_6_7_8()
 #figures_9_10_11()
-#figures12()
+figures12()
 #figureChirp()
-figures_presentation()
+#figures_presentation()
