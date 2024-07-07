@@ -101,7 +101,7 @@ class PixelGrid:
         output:
             None (None)
         """
-        self.gridValue *= (1 - np.exp(- (self.time - time) ** (2 * n) / (sigmaTime * 2 * n)) * np.exp(- (self.frequency - frequency) ** (2 * n) / (sigmaFrequency * 2 * n)))
+        self.gridValue *= (1 - np.exp(- abs(self.time - time) ** (2 * n) / (sigmaTime * 2 * n)) * np.exp(- abs(self.frequency - frequency) ** (2 * n) / (sigmaFrequency * 2 * n)))
 
     
     def whitenSignal(self, PSD: np.ndarray):
@@ -411,7 +411,7 @@ def setTimeFreqAxes(
     ax.set_yticks(range(0, len(XY_data[1]), XY_skips[1]))
     
     ax.set_xticklabels(np.round(XY_data[0][::XY_skips[0]], 4), fontsize=XY_fontsize[0], rotation=90)
-    ax.set_yticklabels(np.round(XY_data[1][::XY_skips[1]], 4), fontsize=XY_fontsize[1])
+    ax.set_yticklabels(np.angleround(XY_data[1][::XY_skips[1]], 4), fontsize=XY_fontsize[1])
 
     labelTimeFreqAxes(ax, XY_fontsize_labels, xlabel, ylabel, title)
 
