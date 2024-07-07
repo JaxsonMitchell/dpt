@@ -69,6 +69,53 @@ class PixelGrid:
         )
         ax.set_aspect(len(self.time) / (2 * len(self.frequency)))
         plt.show()
+    
+    def windowExtract(self, n: int, time: float, frequency: float, sigmaTime: float = 1, sigmaFrequency: float = 1):
+        """
+        Applies a windowing function to the gridValues attribute of a VoxelGrid object. 
+
+        input:
+            n (int) - Exponent for the windowing function
+            time (float) - Central time for the window
+            frequency (float) - Central frequency for the window
+            sigmaTime (float) - Standard deviation for the time window, default is 1
+            sigmaFrequency (float) - Standard deviation for the frequency window, default is 1
+
+        output:
+            None (None)
+        """
+        self.gridValue *= np.exp(- (self.time - time) ** (2 * n) / (sigmaTime * 2 * n)) * np.exp(- (self.frequency - frequency) ** (2 * n) / (sigmaFrequency * 2 * n)) 
+
+
+    def windowSubtract(self, n: int, time: float, frequency: float, sigmaTime: float = 1, sigmaFrequency: float = 1):
+        """
+        Applies 1 - windowing function to the gridValues attribute of a VoxelGrid object.
+
+        input:
+            n (int) - Exponent for the windowing function
+            time (float) - Central time for the window
+            frequency (float) - Central frequency for the window
+            sigmaTime (float) - Standard deviation for the time window, default is 1
+            sigmaFrequency (float) - Standard deviation for the frequency window, default is 1
+
+        output:
+            None (None)
+        """
+        self.gridValue *= (1 - np.exp(- (self.time - time) ** (2 * n) / (sigmaTime * 2 * n)) * np.exp(- (self.frequency - frequency) ** (2 * n) / (sigmaFrequency * 2 * n)))
+
+    
+    def whitenSignal(self, PSD: np.ndarray):
+        """
+        Divides the gridValues attribute of the VoxelGrid object by the square root of the provided n-Power Spectral Density (n-PSD).
+
+        input:
+            PSD (np.ndarray) - The Power Spectral Density array
+
+        output:
+            None (None)
+        """
+        PSDGrid = np.tile(np.sqrt(PSD), (len(PSD), 1)).T
+        self.gridValue /= PSDGrid
 
 
 class VoxelGrid:

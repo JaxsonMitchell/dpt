@@ -71,7 +71,7 @@ class DPT(TransBC):  # Both normal and inverse.
             signal.labelSignal("signal")
 
 
-class STPT:
+class STPT(TransBC):
     def __init__(self, n: float, domain: np.array, codomain: np.array, window_size: np.array):
         self.n = n
         self.domain = domain
@@ -118,7 +118,7 @@ class STPT:
                              f"{len(signal.domain)} != {len(self.domain)}")
 
 
-class ISTPT:
+class ISTPT(TransBC):
     def __init__(self, n: float, domain: np.array, codomain: np.array, window_size: np.array):
         self.n = n
         self.domain = domain
@@ -172,7 +172,7 @@ class ISTPT:
         return Signal(self.domain, signal)
 
 
-class VVT:
+class VVT(TransBC):
     def __init__(self, n_range: np.arange, domain: np.array, codomain: np.array, window_size: np.array):
         self.n_range = n_range
         self.domain = domain
@@ -217,7 +217,6 @@ class VVT:
         else:
             raise ValueError(f"Invalid signal input, domain must be same size as the transform domain. \n"
                              f"{len(signal.domain)} != {len(self.domain)}")
-
 
 
 class VVT2:
