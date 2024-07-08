@@ -84,7 +84,7 @@ class PixelGrid:
         output:
             None (None)
         """
-        self.gridValue *= np.exp(- (self.time - time) ** (2 * n) / (sigmaTime * 2 * n)) * np.exp(- (self.frequency - frequency) ** (2 * n) / (sigmaFrequency * 2 * n)) 
+        self.gridValue *= np.exp(- abs(self.time - time) ** (2 * n) / (sigmaTime ** (2 * n) * 2 * n)) * np.exp(- abs(self.frequency - frequency) ** (2 * n) / (sigmaFrequency ** (2 * n) * 2 * n)) 
 
 
     def windowSubtract(self, n: int, time: float, frequency: float, sigmaTime: float = 1, sigmaFrequency: float = 1):
