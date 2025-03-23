@@ -72,19 +72,31 @@ class DPT(TransBC):  # Both normal and inverse.
 
 
 class STPT(TransBC):
-    def __init__(self, n: float, domain: np.array, codomain: np.array, window_size: np.array):
+    def __init__(self, n: float, domain: np.array, codomain: np.array, window_size: np.array, time_delay: float = 0.0):
+        """
+            Initializes the transform with an additional time delay parameter t_c.
+    
+            Parameters:
+            - n (float)                      - Chirp Order of the transform
+            - domain (np.array)              - Time domain of the transform
+            - codomain: (np.array)           - Frequency domain of the transform
+            - window_size: (np.array)        - Size of the nGaussian window
+            - time_delay: (float, optional)  - Time shift parameter
+        """
         self.n = n
         self.domain = domain
         self.codomain = codomain
         self.window_size = window_size
         self.matrices = list(self._constructTransform())
+        self.time_day = time_delay
 
     def _constructTransform(self):
-        fs = int(1 / (self.domain[-1] - self.domain[-2]))
+        # If you aren't using an integer sampling frequency, please... what? Fix this if that's the case. I don't quite care enough.
+        fs = int(1 / (self.domain[-1] - self.domain[-2]))  
         time_window = np.linspace(-self.window_size / (2 * fs), self.window_size / (2 * fs),
-                                  self.window_size, endpoint=False)
+                                  self.window_size, endpoint=False)  # Centered about zero, but luckily this doesn't change the time shift issue
 
-        S = con.construct_S(self.n, time_window, self.codomain)
+        S = con.construct_S(self.n, time_window - self.time_delay, self.codomain)
         T = con.construct_T(self.window_size)
         g = con.nGauss_wfunc(self.window_size, self.n)
 
