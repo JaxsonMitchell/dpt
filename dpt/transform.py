@@ -88,7 +88,7 @@ class STPT(TransBC):
         self.codomain = codomain
         self.window_size = window_size
         self.matrices = list(self._constructTransform())
-        self.time_day = time_delay
+        self.time_delay = time_delay
 
     def _constructTransform(self):
         # If you aren't using an integer sampling frequency, please... what? Fix this if that's the case. I don't quite care enough.
