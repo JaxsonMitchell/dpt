@@ -10,144 +10,123 @@ There are 5 transforms that it is built for.
 
 import numpy as np
 import dptcomp.constructor as con
-from dptcomp.sgn import Signal
-from dptcomp.pixel import PixelGrid, VoxelGrid
-from tqdm.auto import tqdm
-from abc import abstractmethod
+from typing import Tuple, List
+import dpt.readtransform as readtransform
 
 
-class TransBC:  # Transform Base Class
-    def __init__(self, domain):
-        self.domain = domain
-
-    @abstractmethod
-    def _constructTransform(self):
-        pass
-
-    @abstractmethod
-    def transform(self, argument: Signal or PixelGrid):
-        pass
-
-    @abstractmethod
-    def _computeTransform(self, argument: Signal or PixelGrid):
-        pass
-
-
-class DPT(TransBC):  # Both normal and inverse.
-    def __init__(self, n: float, domain: np.array, codomain: np.array, inverse: bool = False):
-        """ Initializes the dpt transform with all necessary """
-        super().__init__(domain)
-        self.n = n
-        self.inverse = inverse
-        self.codomain = codomain
+class DPT:  # Both normal and inverse. They are basically the same thing I see no issue
+    def __init__(self, n: float, time: np.ndarray, nfrequency: np.array, inverse: bool = False):
+        """ 
+        Initializes the dpt transform with all necessary
+        
+        Inputs:
+            - n (float) - Chirp Order of the Phi transform such that n > 0.
+            - inverse (boolean) - Either True or False. It's automatically 
+            - time (np.array) - Time or N-Frequency Values, Pick your poison. 
+            - nfrequency (np.array) - The output which is n-frequency values or time. 
+                
+        Outputs: 
+            - Outputs the DPT Object you want to use to transform things :)
+        """
+        self.n        = n
+        self.inverse  = inverse
+        self.time   = time
+        self.nfrequency = nfrequency
         self.matrices = self._constructTransform()
 
-    def _constructTransform(self) -> list[np.array]:
-        S = con.construct_S(self.n, self.domain, self.codomain, self.inverse)
-        T = con.construct_T(len(self.domain))
+    def _constructTransform(self) -> List[np.array]:
+        S = con.construct_S(self.n, self.time, self.nfrequency, self.inverse)
+        T = con.construct_T(len(self.time))
         return [S, T]
 
-    def transform(self, signal: Signal) -> Signal:
-        """ Passes a signal through, it will automatically set the signal """
-        w = self._computeTransform(signal)
-        output_signal = Signal(self.codomain, w)
-        self._labelSignal(output_signal)
-        return output_signal
+    def transform(self, signal: np.array) -> Tuple[np.array, np.array]:
+        """ 
+        Passes a signal through, it will automatically set the signal 
+        """
+        output_signal = self._computeTransform(signal)
+        return output_signal, self.nfrequency 
 
-    def _computeTransform(self, signal: Signal) -> np.array:
+    def _computeTransform(self, signal: np.array) -> np.array:
         """
-        Computes the transform.
+        Computes the transform. In the most general form it takes in an (m, n) signal matrix 
         """
-        if len(signal.domain) == len(self.domain):
-            return np.matmul(self.matrices[0], np.matmul(self.matrices[1], signal.amplitude))
+        if np.shape(signal)[0] == len(self.time):
+            return np.matmul(self.matrices[0], np.matmul(self.matrices[1], signal))
         else:
             raise ValueError(f"Invalid signal input, domain must be same size as the transform domain. \n"
-                             f"{len(signal.domain)} != {len(self.domain)}")
-
-    def _labelSignal(self, signal: Signal) -> None:
-        if not self.inverse:
-            signal.labelSignal("transformed signal", "frequency", "amplitude")
-        else:
-            signal.labelSignal("signal")
-
-
-class STPT(TransBC):
-    def __init__(self, n: float, domain: np.array, codomain: np.array, window_size: np.array, time_delay: float = 0.0):
+                             f"{np.shape(signal)[0]} != {len(self.time)}")
+        
+    def writeToFile(filepath: str):
+        """ 
+        Writes the DPT Object to an H5 File. 
         """
-            Initializes the transform with an additional time delay parameter t_c.
+
+
+class STPT:
+    def __init__(self, n: float, fs: int, nfrequency: np.array, window_size: np.array):
+        """
+        Initializes the transform with an additional time delay parameter t_c.
     
-            Parameters:
+        Parameters:
             - n (float)                      - Chirp Order of the transform
-            - domain (np.array)              - Time domain of the transform
-            - codomain: (np.array)           - Frequency domain of the transform
+            - fs (int)                       - Sampling Frequency of the transform
+            - nfrequency: (np.array)         - Frequency domain of the transform
             - window_size: (np.array)        - Size of the nGaussian window
-            - time_delay: (float, optional)  - Time shift parameter
         """
         self.n = n
-        self.domain = domain
-        self.codomain = codomain
+        self.fs = fs
+        self.nfrequency = nfrequency
         self.window_size = window_size
-        self.time_delay = time_delay
         self.matrices = list(self._constructTransform())
 
     def _constructTransform(self):
-        # If you aren't using an integer sampling frequency, please... what? Fix this if that's the case. I don't quite care enough.
-        fs = int(1 / (self.domain[-1] - self.domain[-2]))  
-        time_window = np.linspace(-self.window_size / (2 * fs), self.window_size / (2 * fs),
-                                  self.window_size, endpoint=False)  # Centered about zero, but luckily this doesn't change the time shift issue
+        time_window = np.linspace(
+            -self.window_size / (2 * self.fs), 
+            self.window_size / (2 * self.fs),
+            self.window_size, endpoint=False
+        )
 
-        S = con.construct_S(self.n, time_window - self.time_delay, self.codomain)
+        S = con.construct_S(self.n, time_window, self.nfrequency)
         T = con.construct_T(self.window_size)
         g = con.nGauss_wfunc(self.window_size, self.n)
 
         self.S = S
         self.T = T
-        self.g = g
+        self.g = g / np.sqrt(integrate_vectors(g, g, 1 / self.fs))
 
         return [S, T, g]
 
-    def transform(self, signal: Signal) -> PixelGrid:
+    def transform(self, signal: np.array) -> Tuple[np.array, np.array]: # You should already have the time
         pixel_array = self._computeTransform(signal)
-        output_pixelgrid = PixelGrid(
-            time=self.domain,
-            frequency=self.codomain,
-            gridValue=pixel_array,
-            n=self.n
-        )
-        return output_pixelgrid
+        return pixel_array, self.nfrequency
 
-    def _computeTransform(self, signal: Signal) -> np.array:
-        if len(signal.domain) == len(self.domain):
-            return np.matmul(
-                self.S, np.matmul(
-                    self.T, con.constructF(
-                        signal.amplitude, self.window_size, self.g
-                    )
+    def _computeTransform(self, signal) -> np.array:
+        return np.matmul(
+            self.S, np.matmul(
+                self.T, con.constructF(
+                    signal, self.window_size, self.g
                 )
             )
-        else:
-            raise ValueError(f"Invalid signal input, domain must be same size as the transform domain. \n"
-                             f"{len(signal.domain)} != {len(self.domain)}")
+        )
 
-
-class ISTPT(TransBC):
-    def __init__(self, n: float, domain: np.array, codomain: np.array, window_size: np.array):
+class ISTPT: # Currently unsure.
+    def __init__(self, n: float, time: np.array, codomain: np.array, window_size: np.array):
         self.n = n
-        self.domain = domain
-        self.codomain = codomain
+        self.time = time
+        self.nfrequency = codomain
         self.window_size = window_size
         self.matrices = list(self._constructTransform())
 
     def _constructTransform(self):
-        self.fs = int(1 / (self.domain[-1] - self.domain[-2]))
+        self.fs = int(1 / (self.time[-1] - self.time[-2]))
         time_window = np.linspace(-self.window_size / (2 * self.fs), self.window_size / (2 * self.fs),
                                   self.window_size, endpoint=False)
-        self.dt = abs(time_window[-1] - time_window[-2])
+        self.dt = 1 / self.fs
         
-        S = con.construct_S(self.n, self.codomain, time_window)
-        T = con.construct_T(len(self.codomain))
+        S = con.construct_S(self.n, self.nfrequency, time_window)
+        T = con.construct_T(len(self.nfrequency))
         g = con.nGauss_wfunc(self.window_size, self.n)
-        norm_g = integrate_vectors(g, g, self.dt) ** 2
+        norm_g = integrate_vectors(g, g, self.dt) ** 2 # It should be normalized, but I don't wanna risk it homie.
 
         self.S = S
         self.T = T
@@ -156,16 +135,17 @@ class ISTPT(TransBC):
 
         return [S, T, g]
     
-    def _computeTransform(self, pixel_grid: PixelGrid) -> Signal:
+    def _computeTransform(self, pixel_grid: np.array) -> np.array:
         time_grid = np.matmul(
-            self.S, np.matmul(self.T, pixel_grid.gridValue)
+            self.S, np.matmul(self.T, pixel_grid)
         )
 
         padded_time_grid = np.hstack(
             (
-            np.zeros((self.window_size, self.window_size//2)), 
-            time_grid, 
-            np.zeros((self.window_size, self.window_size//2)))
+                np.zeros((self.window_size, self.window_size // 2)), 
+                time_grid, 
+                np.zeros((self.window_size, self.window_size // 2))
+            )
         )
 
         diagonal_vectors = [
@@ -174,64 +154,19 @@ class ISTPT(TransBC):
 
         signal = list(
             map(lambda vector: integrate_vectors(vector, self.g, self.dt), diagonal_vectors)
-        )
+        ) # I made this a while ago and I'm now thinking to myself... How... did I even do this?
 
         return signal
     
-    def transform(self, pixel_grid: PixelGrid) -> Signal:
-        """ Inverse short time transform method. """
+    def transform(self, pixel_grid: np.array) -> np.array: 
+        # I am assuming you have the times that you would want for the signal beforehand. 
+        # YOU NEED THAT BTW so not really an assumption Sophomore Jax.
+        # Inverse short time transform method. 
         signal = np.array(self._computeTransform(pixel_grid)) / self.norm_g
-        return Signal(self.domain, signal)
+        return signal
 
 
-class VVT(TransBC):
-    def __init__(self, n_range: np.arange, domain: np.array, codomain: np.array, window_size: np.array):
-        self.n_range = n_range
-        self.domain = domain
-        self.codomain = codomain
-        self.window_size = window_size
-        self.matrices = list(self._constructTransform())
-
-    def _constructTransform(self):
-        fs = int(1 / (self.domain[-1] - self.domain[-2]))
-        time_window = np.linspace(-self.window_size / (2 * fs), self.window_size / (2 * fs),
-                                  self.window_size, endpoint=False)
-        matrices = []
-        for n in tqdm(self.n_range, desc="Constructing Voxel Transform"):
-            S = con.construct_S(n, time_window, self.codomain)
-            T = con.construct_T(self.window_size)
-            g = con.nGauss_wfunc(self.window_size, n) / integrate_vectors(
-                con.nGauss_wfunc(self.window_size, n), con.nGauss_wfunc(self.window_size, n), 1 / fs
-            )
-            matrices.append((n, S, T, g))
-        return matrices
-
-    def transform(self, signal: Signal) -> VoxelGrid:
-        voxel_array = self._computeTransform(signal)
-        voxel_grid = VoxelGrid(self.domain, self.codomain, self.n_range, voxel_array)
-        return voxel_grid
-
-    def _computeTransform(self, signal: Signal) -> np.array:
-        if len(signal.domain) == len(self.domain):
-            voxel_grid = np.zeros((len(self.codomain), len(self.domain), len(self.n_range)), dtype=complex)
-            for i in tqdm(range(len(self.n_range)), desc="Computing transform"):
-                S = self.matrices[i][1]
-                T = self.matrices[i][2]
-                g = self.matrices[i][3]
-                voxel_grid[:, :, i] = np.matmul(
-                    S, np.matmul(
-                        T, con.constructF(
-                            signal.amplitude, self.window_size, g
-                        )
-                    )
-                )
-            return np.abs(voxel_grid)
-        else:
-            raise ValueError(f"Invalid signal input, domain must be same size as the transform domain. \n"
-                             f"{len(signal.domain)} != {len(self.domain)}")
-
-
-class VVT2:
+class VVT:
     def __init__(self, n_range: np.arange, fs: np.array, codomain: np.array, window_size: np.array):
         self.n_range = n_range
         self.fs = fs
@@ -246,18 +181,17 @@ class VVT2:
             n,
             con.construct_S(n, time_window, self.codomain),
             con.construct_T(self.window_size),
-            con.nGauss_wfunc(self.window_size, n) / integrate_vectors(
+            con.nGauss_wfunc(self.window_size, n) / np.sqrt(integrate_vectors(
                 con.nGauss_wfunc(self.window_size, n), con.nGauss_wfunc(self.window_size, n), 1 / self.fs
-            )
+            ))
         ) for n in self.n_range]
 
-    def transform(self, signal: Signal) -> VoxelGrid:
+    def transform(self, signal: np.array) -> Tuple[np.array, np.array, np.array]:
         voxel_array = self._computeTransform(signal)
-        voxel_grid = VoxelGrid(signal.domain, self.codomain, self.n_range, voxel_array)
-        return voxel_grid
+        return voxel_array, self.codomain, self.n_range
 
-    def _computeTransform(self, signal: Signal) -> np.array:
-        voxel_grid = np.zeros((len(self.codomain), len(signal.domain), len(self.n_range)), dtype=complex)
+    def _computeTransform(self, signal: np.array) -> np.array:
+        voxel_grid = np.zeros((len(self.codomain), len(signal), len(self.n_range)), dtype=complex)
         for i in range(len(self.n_range)):
             S = self.matrices[i][1]
             T = self.matrices[i][2]
@@ -265,12 +199,13 @@ class VVT2:
             voxel_grid[:, :, i] = np.matmul(
                 S, np.matmul(
                     T, con.constructF(
-                        signal.amplitude, self.window_size, g
+                        signal, self.window_size, g
                     )
                 )
             )
         return np.abs(voxel_grid)
 
+# These were used to correct some potential not a number errors that I was getting at some point
 def has_nan(matrix):
     return np.isnan(matrix).any()
 
@@ -284,7 +219,7 @@ def print_nan_indices(matrix):
     else:
         print("No NaN values found in the matrix.")
 
-
+# Used within my ISTPT code.
 def integrate_vectors(v1: np.array, v2: np.array, step_size):
     """ This utilizes the dot product for efficient 
     integration given a constant step size. This
@@ -292,23 +227,8 @@ def integrate_vectors(v1: np.array, v2: np.array, step_size):
     return np.dot(v1, v2) * step_size
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    from dptcomp.dpfunc import s_n, c_n
+    n = 2
+    times = np.arange(0, 1, 1/1024)
+    freqs = np.arange(0, 32, 1/8)
 
-    time = np.arange(-2, 2, 1/250)
-    freq = np.arange(-4, 4, 1/250)
-    n = 5
-
-    forward = STPT(n, time, freq, 500)
-    reverse = ISTPT(n, time, freq, 500)
-
-    fig, ax = plt.subplots()
-
-    amp = Signal(time, [np.exp(-t ** 2) * (np.sin(t ** 3) + .1 * np.cos(8 * t ** 5) + s_n(2, 3 * t)) for t in time])
-    amp.populatePlot(ax)
-
-    pix = forward.transform(amp)
-    pix.plot()
-
-    amp2 = reverse.transform(pix)
-    amp2.plot(real=True)
+    dpt   = DPT(n, times, freqs)

@@ -1,9 +1,10 @@
 """
 Name: Jaxson Mitchell
 Date: 7/1/2024
-H5 File IO functions used within the transformations for data storage.
-"""
 
+H5 File IO functions used within the transformations for data storage. 
+As well as the functions to read and write DPT, STPT, ISTPT, and VVT objects
+"""
 
 import h5py
 import numpy as np

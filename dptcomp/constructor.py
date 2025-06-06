@@ -1,29 +1,32 @@
 """
 Name: Jaxson Mitchell
 
-This lays out the constructions of all the matrices described within the paper.
+This lays out the constructions of all the matrices described within the paper. It's a pretty good 
+paper you should read it sometime :)
 """
 
 
 import numpy as np
 from dptcomp.dpfunc import K
+from tqdm import tqdm
 
 
 def construct_S(n: float, domain, codomain, inverse=False) -> np.array:
     domain = np.append(domain, domain[-1] * 2 - domain[-2])
-
+    output_domain = tqdm(range(len(codomain)), desc=f"Constructing S Matrix (Chirp Order {n:.4f})")
+    
     if not inverse:
         S = np.array(
             [
                 [K(n, domain[i], codomain[j]) for i in range(len(domain))]
-                for j in range(len(codomain))
+                for j in output_domain
             ]
         )
     else:
         S = np.array(
             [
                 [K(n, domain[i], codomain[j]).conjugate() for i in range(len(domain))]
-                for j in range(len(codomain))
+                for j in output_domain
             ]
         )
     return S
@@ -80,29 +83,29 @@ def constructF(amplitude: np.array, J: int, g: np.array) -> np.array:
         ]
     )
 
-
-def nGauss_wfunc(N: int, n):
-    """Automated window function for the vdpt."""
-    # This initialization of the sigma value is so that it cuts off right when the window size is cut off. It can be
-    # changed depending on what you want from a window function.
-    sigma = (1 / 3) / (2 * n - 1) ** (
-        1 / (2 * n)
-    )  # Places point of inflection close to the edge. This is done through finding the zeros of the second derivative
-
-    return np.array(
-        [
-            np.exp(-((abs(x - 1) / (sigma * N)) ** (2 * n)) / (2 * n))
-            for x in np.arange(-N // 2, N // 2)
-        ]
-    )
-
-
+def nGauss_wfunc(N: int, n, drop: float = .05):
+    """Automated window function for the Voxel Transform."""
+    domain = np.linspace(-(2 * n * np.log(1 / drop)) ** (1 / (2 * n)), (2 * n * np.log(1 / drop)) ** (1 / (2 * n)), N)
+    window = np.exp(- abs(domain) ** (2 * n) / (2 * n))
+    return 1 / np.sqrt(np.dot(window, window)) * window # Gotta normalize it homie.
+        
 if __name__ == "__main__":
-    domain = range(30)
-    ampltiude = [2] + [1] * (len(domain) - 2) + [3]
+    import matplotlib.pyplot as plt
 
-    print(ampltiude)
+    N = 1000
+    T = construct_T(N)
 
-    wj = constructF(ampltiude, 5)
-    
-    print(wj)
+    n        = 5/8
+    domain   = np.arange(0, 1, 1/1024)
+    codomain = np.arange(0, 1, 1/1024)
+    S = construct_S(n, domain, codomain)
+
+    n = 3 
+    N = 1024
+    plt.plot(nGauss_wfunc(N, n))
+    plt.show() 
+
+    n = .333 
+    N = 1024
+    plt.plot(nGauss_wfunc(N, n))
+    plt.show()

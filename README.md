@@ -7,4 +7,3 @@ This is a repository for an implementation of a family of integral transforms. T
 software is able to extract chirps from signals leading to applications within the 
 analysis of gravitational waves. It is meant to be an easy and quick to use for 
 analysis.
-

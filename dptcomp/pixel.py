@@ -1,10 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import matplotlib.cm as cm
 import matplotlib.animation as animation
-import imageio
-
 
 class PixelGrid:
     def __init__(
