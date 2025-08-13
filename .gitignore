@@ -152,7 +152,4 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-white_noise_psd
-pink_noise_psd
-brown_noise_psd
-figures/power_spectral_density
+testing/
