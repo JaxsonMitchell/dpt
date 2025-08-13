@@ -110,15 +110,15 @@ class STPT:
         )
 
 class ISTPT: # Currently unsure.
-    def __init__(self, n: float, time: np.array, codomain: np.array, window_size: np.array):
-        self.n = n
+    def __init__(self, n: float, fs: int, time: np.array, nfrequency: np.array, window_size: np.array):
+        self.n  = n
+        self.fs = fs
         self.time = time
-        self.nfrequency = codomain
+        self.nfrequency = nfrequency
         self.window_size = window_size
         self.matrices = list(self._constructTransform())
 
     def _constructTransform(self):
-        self.fs = int(1 / (self.time[-1] - self.time[-2]))
         time_window = np.linspace(-self.window_size / (2 * self.fs), self.window_size / (2 * self.fs),
                                   self.window_size, endpoint=False)
         self.dt = 1 / self.fs
@@ -149,7 +149,7 @@ class ISTPT: # Currently unsure.
         )
 
         diagonal_vectors = [
-            np.array([padded_time_grid[j, j+t] for j in range(self.window_size)]) for t in range(len(self.domain))
+            np.array([padded_time_grid[j, j+t] for j in range(self.window_size)]) for t in range(len(self.time))
         ]
 
         signal = list(
@@ -159,10 +159,7 @@ class ISTPT: # Currently unsure.
         return signal
     
     def transform(self, pixel_grid: np.array) -> np.array: 
-        # I am assuming you have the times that you would want for the signal beforehand. 
-        # YOU NEED THAT BTW so not really an assumption Sophomore Jax.
-        # Inverse short time transform method. 
-        signal = np.array(self._computeTransform(pixel_grid)) / self.norm_g
+        signal = np.array(self._computeTransform(pixel_grid)) / (4 * self.norm_g * self.window_size)
         return signal
 
 
